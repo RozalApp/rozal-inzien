@@ -36,7 +36,10 @@
     <div class="page active" id="page-planning">
       <div class="app-topbar">
         <div><div class="app-titel">Planning</div><div class="app-sub" id="pl-maand-label">—</div></div>
-        <div class="avatar" id="gebruiker-avatar" onclick="uitloggen()" title="Uitloggen"></div>
+        <div class="topbar-rechts">
+          <div class="refresh-btn" id="refresh-planning" onclick="ververs('planning', this)" title="Vernieuwen">⟳</div>
+          <div class="avatar" id="gebruiker-avatar" onclick="uitloggen()" title="Uitloggen"></div>
+        </div>
       </div>
       <div class="week-nav">
         <div class="week-nav-btn" onclick="verschuifWeek(-1)">‹</div>
@@ -54,7 +57,10 @@
     <div class="page" id="page-klanten">
       <div class="app-topbar">
         <div><div class="app-titel">Klanten</div><div class="app-sub" id="kl-aantal">—</div></div>
-        <div class="avatar" onclick="uitloggen()" title="Uitloggen"></div>
+        <div class="topbar-rechts">
+          <div class="refresh-btn" id="refresh-klanten" onclick="ververs('klanten', this)" title="Vernieuwen">⟳</div>
+          <div class="avatar" onclick="uitloggen()" title="Uitloggen"></div>
+        </div>
       </div>
       <div class="zoekbalk-wrap"><div class="zoekbalk">🔍 <input id="kl-zoek" placeholder="Zoek op naam, plaats of telefoon..." oninput="klZoekOnInput()"></div></div>
       <div class="dag-blok" style="padding-top:0" id="klanten-lijst"><div class="laad-scherm"><div class="spinner"></div><div>Klanten laden...</div></div></div>
@@ -64,7 +70,10 @@
     <div class="page" id="page-reparaties">
       <div class="app-topbar">
         <div><div class="app-titel">Reparatiebonnen</div><div class="app-sub" id="rep-aantal">—</div></div>
-        <div class="avatar" onclick="uitloggen()" title="Uitloggen"></div>
+        <div class="topbar-rechts">
+          <div class="refresh-btn" id="refresh-reparaties" onclick="ververs('reparaties', this)" title="Vernieuwen">⟳</div>
+          <div class="avatar" onclick="uitloggen()" title="Uitloggen"></div>
+        </div>
       </div>
       <div class="zoekbalk-wrap"><div class="zoekbalk">🔍 <input placeholder="Zoek op klant of bonnummer..." oninput="repZoekOnInput(this.value)"></div></div>
       <div class="chip-filter" id="rep-chips">
