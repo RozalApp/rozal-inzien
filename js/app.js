@@ -255,5 +255,19 @@ async function openBonPdfKnop(bonnrOfBestand, btnId) {
   }
 }
 
+// ── Verversen ────────────────────────────────────────────────
+async function ververs(tabblad, knopEl) {
+  knopEl.classList.add('laden');
+  try {
+    if (tabblad === 'planning') { await laadPlanning(); renderWeekStrip(); }
+    else if (tabblad === 'klanten') { await laadKlanten(); renderKlanten(); }
+    else if (tabblad === 'reparaties') { await laadReparatiebonnen(); renderReparatiebonnen(); }
+  } catch (e) {
+    alert('Vernieuwen mislukt: ' + vertaalFout(e));
+  } finally {
+    knopEl.classList.remove('laden');
+  }
+}
+
 function sluitOverlay(id) { document.getElementById(id).classList.remove('open'); }
 function escapeHtml(s) { return String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
