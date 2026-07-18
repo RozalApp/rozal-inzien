@@ -28,7 +28,17 @@ async function initAuth() {
   await msalInstance.initialize();
 
   // Afhandelen van redirect terugkomst (na inloggen bij Microsoft)
-  const response = await msalInstance.handleRedirectPromise();
+  let response = null;
+  try {
+    response = await msalInstance.handleRedirectPromise();
+  } catch (e) {
+    console.warn('Redirect afhandelen mislukt, oude inlogstatus wordt opgeschoond:', e);
+    ruimVastgelopenInlogstatusOp();
+    // Nieuwe instantie nodig na het opschonen van de cache
+    msalInstance = new msal.PublicClientApplication(msalConfig);
+    await msalInstance.initialize();
+  }
+
   if (response && response.account) {
     _huidigeAccount = response.account;
     msalInstance.setActiveAccount(response.account);
@@ -45,8 +55,28 @@ async function initAuth() {
   return false;
 }
 
+// Verwijdert MSAL's tijdelijke "bezig met inloggen"-vlaggetjes. Die kunnen
+// blijven staan als een eerdere inlogpoging halverwege misging (bv. door
+// een verkeerd ingestelde redirect-URL) — zonder dit zou de app daarna
+// blijven denken dat er al een inlogpoging loopt.
+function ruimVastgelopenInlogstatusOp() {
+  try {
+    [sessionStorage, localStorage].forEach(opslag => {
+      Object.keys(opslag)
+        .filter(k => k.startsWith('msal.') || k.toLowerCase().includes('interaction.status'))
+        .forEach(k => opslag.removeItem(k));
+    });
+  } catch (e) { console.warn('Opschonen mislukt:', e); }
+}
+
 function inloggen() {
-  msalInstance.loginRedirect({ scopes: GRAPH_SCOPES });
+  try {
+    msalInstance.loginRedirect({ scopes: GRAPH_SCOPES });
+  } catch (e) {
+    console.warn('Inloggen mislukt, opnieuw proberen na opschonen:', e);
+    ruimVastgelopenInlogstatusOp();
+    msalInstance.loginRedirect({ scopes: GRAPH_SCOPES });
+  }
 }
 
 function uitloggen() {
