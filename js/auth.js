@@ -38,9 +38,14 @@ async function initAuth() {
   } catch (e) {
     console.warn('Redirect afhandelen mislukt, oude inlogstatus wordt opgeschoond:', e);
     ruimVastgelopenInlogstatusOp();
-    // Nieuwe instantie nodig na het opschonen van de cache
-    msalInstance = new msal.PublicClientApplication(msalConfig);
-    await msalInstance.initialize();
+    // Belangrijk: een mislukte poging laat soms een kapot #-restje in de
+    // URL staan. Zonder dit weg te halen blijft de app dat restje bij elke
+    // volgende poging opnieuw proberen te verwerken en steeds opnieuw falen.
+    if (window.location.hash) {
+      history.replaceState(null, '', window.location.pathname + window.location.search);
+    }
+    response = null;
+    // Ga gewoon door naar het inlogscherm — niet opnieuw proberen te parsen.
   }
 
   if (response && response.account) {
