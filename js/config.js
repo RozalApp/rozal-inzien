@@ -16,7 +16,9 @@ const CONFIG = {
     'Facturen':        'ADMINISTRATIE',
     'Reparatiebonnen': 'RozalApp/Reparatiebonnen',
   },
-  // Redirect URI moet exact overeenkomen met wat in Azure staat
-  // bij App registraties → Rozal Kantoor → Authentication → SPA
-  redirectUri: window.location.origin + window.location.pathname,
+  // Vast ingesteld op exact dezelfde waarde als in Azure → Authentication.
+  // Dit NIET dynamisch afleiden uit window.location — als de pagina ooit
+  // wordt geopend met .../index.html achteraan (bv. via "Zet op beginscherm"),
+  // zou de redirect dan niet meer matchen met wat in Azure staat.
+  redirectUri: 'https://rozalapp.github.io/rozal-inzien/',
 };
