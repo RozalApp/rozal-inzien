@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1">
+<title>Rozal Kantoor - Inzien</title>
+<meta name="theme-color" content="#2D5016">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icons/icon-180.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Rozal Kantoor">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=DM+Serif+Display&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/style.css">
+<script src="https://alcdn.msauth.net/browser/2.38.3/js/msal-browser.min.js"></script>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div class="login-screen" id="login-shell">
+  <div class="login-logo"><img src="icons/icon-192.png" alt="Rozal"></div>
+  <div class="login-titel">Rozal Kantoor</div>
+  <div class="login-sub">Alleen-lezen versie<br>Planning · Klanten · Reparatiebonnen</div>
+  <div class="ms-btn" id="login-btn" onclick="inloggen()">
+    <div class="ms-logo"><div></div><div></div><div></div><div></div></div>
+    Inloggen met Microsoft
+  </div>
+  <div class="login-fout" id="login-fout" style="display:none"></div>
+</div>
+
+<!-- APP -->
+<div id="app-shell">
+  <div class="screen-content">
+
+    <!-- PLANNING -->
+    <div class="page active" id="page-planning">
+      <div class="app-topbar">
+        <div><div class="app-titel">Planning</div><div class="app-sub" id="pl-maand-label">—</div></div>
+        <div class="avatar" id="gebruiker-avatar" onclick="uitloggen()" title="Uitloggen"></div>
+      </div>
+      <div class="week-nav">
+        <div class="week-nav-btn" onclick="verschuifWeek(-1)">‹</div>
+        <div class="week-vandaag-btn" onclick="gaNaarVandaag()">Vandaag</div>
+        <div class="week-nav-btn" onclick="verschuifWeek(1)">›</div>
+      </div>
+      <div class="week-strip" id="week-strip"></div>
+      <div class="dag-blok">
+        <div class="dag-label" id="dag-label">—</div>
+        <div id="dag-items"><div class="laad-scherm"><div class="spinner"></div><div>Planning laden...</div></div></div>
+      </div>
+    </div>
+
+    <!-- KLANTEN -->
+    <div class="page" id="page-klanten">
+      <div class="app-topbar">
+        <div><div class="app-titel">Klanten</div><div class="app-sub" id="kl-aantal">—</div></div>
+        <div class="avatar" onclick="uitloggen()" title="Uitloggen"></div>
+      </div>
+      <div class="zoekbalk-wrap"><div class="zoekbalk">🔍 <input id="kl-zoek" placeholder="Zoek op naam, plaats of telefoon..." oninput="klZoekOnInput()"></div></div>
+      <div class="dag-blok" style="padding-top:0" id="klanten-lijst"><div class="laad-scherm"><div class="spinner"></div><div>Klanten laden...</div></div></div>
+    </div>
+
+    <!-- REPARATIEBONNEN -->
+    <div class="page" id="page-reparaties">
+      <div class="app-topbar">
+        <div><div class="app-titel">Reparatiebonnen</div><div class="app-sub" id="rep-aantal">—</div></div>
+        <div class="avatar" onclick="uitloggen()" title="Uitloggen"></div>
+      </div>
+      <div class="zoekbalk-wrap"><div class="zoekbalk">🔍 <input placeholder="Zoek op klant of bonnummer..." oninput="repZoekOnInput(this.value)"></div></div>
+      <div class="chip-filter" id="rep-chips">
+        <div class="chip actief" onclick="repZetFilter('alle', this)">Alle</div>
+        <div class="chip" onclick="repZetFilter('open', this)">Open</div>
+        <div class="chip" onclick="repZetFilter('ingepland', this)">Ingepland</div>
+        <div class="chip" onclick="repZetFilter('klaar', this)">Klaar</div>
+        <div class="chip" onclick="repZetFilter('gefactureerd', this)">Gefactureerd</div>
+      </div>
+      <div class="dag-blok" style="padding-top:0" id="bon-lijst"><div class="laad-scherm"><div class="spinner"></div><div>Reparatiebonnen laden...</div></div></div>
+    </div>
+
+  </div><!-- /screen-content -->
+
+  <div class="tab-bar">
+    <div class="tab-item active" id="tab-planning" onclick="switchTab('planning')"><div class="tab-icon">📅</div><div class="tab-label">Planning</div></div>
+    <div class="tab-item" id="tab-klanten" onclick="switchTab('klanten')"><div class="tab-icon">👥</div><div class="tab-label">Klanten</div></div>
+    <div class="tab-item" id="tab-reparaties" onclick="switchTab('reparaties')"><div class="tab-icon">🔧</div><div class="tab-label">Reparatiebonnen</div></div>
+  </div>
+</div><!-- /app-shell -->
+
+<!-- OVERLAY: klant detail -->
+<div class="overlay" id="overlay-klant">
+  <div class="overlay-topbar"><div class="overlay-back" onclick="sluitOverlay('overlay-klant')">‹</div><div class="overlay-titel" id="ok-naam">Klant</div></div>
+  <div class="overlay-content">
+    <div class="detail-hero">
+      <div class="detail-veld"><div class="detail-label">Adres</div><div class="detail-waarde" id="ok-adres">—</div></div>
+      <div class="detail-veld"><div class="detail-label">Telefoon</div><div class="detail-waarde" id="ok-tel">—</div></div>
+      <div class="detail-veld"><div class="detail-label">E-mail</div><div class="detail-waarde" id="ok-email">—</div></div>
+    </div>
+    <div class="sectie-label">Bestanden</div>
+    <div id="ok-bestanden"></div>
+  </div>
+</div>
+
+<!-- OVERLAY: reparatiebon detail -->
+<div class="overlay" id="overlay-bon">
+  <div class="overlay-topbar"><div class="overlay-back" onclick="sluitOverlay('overlay-bon')">‹</div><div class="overlay-titel" id="ob-titel">Bon</div></div>
+  <div class="overlay-content">
+    <div class="detail-hero">
+      <div class="detail-veld"><div class="detail-label">Klant</div><div class="detail-waarde" id="ob-klant">—</div></div>
+      <div class="detail-veld"><div class="detail-label">Adres</div><div class="detail-waarde" id="ob-adres">—</div></div>
+      <div class="detail-veld"><div class="detail-label">Telefoon</div><div class="detail-waarde" id="ob-telefoon">—</div></div>
+      <div class="detail-veld"><div class="detail-label">Klacht</div><div class="detail-waarde" id="ob-klacht">—</div></div>
+      <div class="detail-veld"><div class="detail-label">Status</div><div class="detail-waarde" id="ob-status">—</div></div>
+    </div>
+    <div class="pdf-btn" id="ob-pdf-btn">📄 Reparatiebon PDF openen</div>
+  </div>
+</div>
+
+<!-- BOTTOM SHEET: afspraak detail -->
+<div class="sheet-backdrop" id="sheet-backdrop" onclick="sluitSheet()"></div>
+<div class="sheet" id="afspraak-sheet">
+  <div class="sheet-grip"></div>
+  <div class="sheet-header" id="sh-header"><div class="sheet-header-naam" id="sh-naam">—</div><div class="sheet-header-sub" id="sh-sub">—</div></div>
+  <div class="sheet-body" id="sh-body"></div>
+</div>
+
+<script src="js/config.js"></script>
+<script src="js/auth.js"></script>
+<script src="js/graph.js"></script>
+<script src="js/data.js"></script>
+<script src="js/app.js"></script>
+<script>
+(async function () {
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('sw.js').catch(e => console.warn('Service worker registratie mislukt:', e));
+  }
+  try {
+    const ingelogd = await initAuth();
+    if (ingelogd) {
+      document.getElementById('gebruiker-avatar').textContent = (huidigeGebruikerNaam()[0] || 'A').toUpperCase();
+      await startApp();
+    }
+  } catch (e) {
+    console.error('Opstarten mislukt:', e);
+    const foutEl = document.getElementById('login-fout');
+    foutEl.textContent = 'Inloggen mislukt. Probeer het opnieuw.';
+    foutEl.style.display = 'block';
+  }
+})();
+</script>
+</body>
+</html>
