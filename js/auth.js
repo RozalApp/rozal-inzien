@@ -16,7 +16,11 @@ const msalConfig = {
   },
   cache: {
     cacheLocation: 'localStorage', // zodat je ingelogd blijft na herstart
-    storeAuthStateInCookie: false,
+    storeAuthStateInCookie: true,  // Safari-fix: bewaart inlogstatus ook in
+                                    // een cookie, nodig omdat Safari tijdens
+                                    // de heen-en-terug naar Microsoft soms
+                                    // browseropslag kwijtraakt (vooral als
+                                    // app op het beginscherm).
   },
 };
 
