@@ -129,6 +129,20 @@
 <script src="js/data.js"></script>
 <script src="js/app.js"></script>
 <script>
+function escapeHtmlLocal(s) { return String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+
+// Toont de technische foutmelding erbij, zodat we bij problemen precies
+// kunnen zien wat Microsoft of MSAL teruggeeft (bv. een AADSTS-nummer).
+function toonInlogFout(e) {
+  const foutEl = document.getElementById('login-fout');
+  const code = e && (e.errorCode || e.name) || '';
+  const bericht = e && e.message ? e.message : String(e || '');
+  foutEl.innerHTML = 'Inloggen mislukt. Probeer het opnieuw.' +
+    '<br><span style="font-size:11px;opacity:0.65;word-break:break-word">' +
+    escapeHtmlLocal(code ? code + ' — ' + bericht : bericht) + '</span>';
+  foutEl.style.display = 'block';
+}
+
 (async function () {
   if ('serviceWorker' in navigator) {
     navigator.serviceWorker.register('sw.js').catch(e => console.warn('Service worker registratie mislukt:', e));
@@ -141,9 +155,7 @@
     }
   } catch (e) {
     console.error('Opstarten mislukt:', e);
-    const foutEl = document.getElementById('login-fout');
-    foutEl.textContent = 'Inloggen mislukt. Probeer het opnieuw.';
-    foutEl.style.display = 'block';
+    toonInlogFout(e);
   }
 })();
 </script>
