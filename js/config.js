@@ -12,9 +12,20 @@ const CONFIG = {
   klantentabelGuid: '5eaf4ac0-5c08-48ac-b934-63f218df30c8',
   docPad:           'Rozal/Documenten ROZAL',
   docMappen: {
-    'Offertes':        'OFFERTES',
-    'Facturen':        'ADMINISTRATIE',
-    'Reparatiebonnen': 'RozalApp/Reparatiebonnen',
+    'Offertes':         'OFFERTES',
+    'Orders':           'ORDERS',
+    'Bestelorders':     'Bestelorders Klanten',
+    'Facturen':         'ADMINISTRATIE',
+    'Inmeetdocumenten': 'RozalApp/Inmeetdocumenten',
+    'Reparatiebonnen':  'RozalApp/Reparatiebonnen',
+    'Montagebon':       'RozalApp/Montagebon',
+  },
+  // Mappen waar de bestandsnaam niet begint met de achternaam — daar staat
+  // een extra herkenningswoord in dat ook moet matchen (net als in de
+  // Windows-app), anders krijg je hier te veel valse resultaten.
+  docMappenFilter: {
+    'Facturen':     'factuur',
+    'Bestelorders': 'bestelling',
   },
   // Vast ingesteld op exact dezelfde waarde als in Azure → Authentication.
   // Dit NIET dynamisch afleiden uit window.location — als de pagina ooit

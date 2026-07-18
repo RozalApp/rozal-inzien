@@ -165,12 +165,23 @@ async function toonKlantDetail(idx) {
 
   try {
     const bestanden = await zoekBestandenVoorKlant(k);
-    const iconMap = { Reparatiebonnen:['🔧','#fde8e6'], Offertes:['📄','#FEF3E2'], Facturen:['🧾','#EAF0E1'] };
+    const iconMap = {
+      Reparatiebonnen:  ['🔧', '#fde8e6'],
+      Offertes:         ['📄', '#FEF3E2'],
+      Orders:           ['📋', '#E7F0F8'],
+      Bestelorders:     ['📦', '#E7F0F8'],
+      Facturen:         ['🧾', '#EAF0E1'],
+      Inmeetdocumenten: ['📐', '#FEF3E2'],
+      Montagebon:       ['🛠️', '#EAF0E1'],
+    };
     if (!bestanden.length) {
       document.getElementById('ok-bestanden').innerHTML = '<div class="leeg-melding">Geen bestanden gevonden</div>';
       return;
     }
-    const stipKleur = { Reparatiebonnen:'#C0392B', Offertes:'#E8820C', Facturen:'#2D5016' };
+    const stipKleur = {
+      Reparatiebonnen: '#C0392B', Offertes: '#E8820C', Facturen: '#2D5016',
+      Orders: '#2F6FAE', Bestelorders: '#2F6FAE', Inmeetdocumenten: '#E8820C', Montagebon: '#2D5016',
+    };
     document.getElementById('ok-bestanden').innerHTML = '<div class="tijdlijn">' + bestanden.map(b => {
       const icon = iconMap[b.type] || ['📄', '#EAF0E1'];
       const datumStr = b.datum ? new Date(b.datum).toLocaleDateString('nl-NL', { day:'numeric', month:'long', year:'numeric' }) : 'Datum onbekend';
