@@ -28,9 +28,8 @@ function zelfdeD(a, b) { return isoDatum(a) === isoDatum(b); }
 
 // ── Opstarten na login ──────────────────────────────────────
 async function startApp() {
-  document.getElementById('gebruiker-naam').textContent = huidigeGebruikerNaam();
   document.getElementById('app-shell').classList.add('active');
-  document.getElementById('login-shell').classList.remove('active');
+  document.getElementById('login-shell').style.display = 'none';
 
   await Promise.allSettled([laadPlanning(), laadKlanten(), laadReparatiebonnen()]);
   renderWeekStrip();
