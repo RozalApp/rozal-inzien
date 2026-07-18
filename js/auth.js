@@ -37,6 +37,7 @@ async function initAuth() {
     response = await msalInstance.handleRedirectPromise();
   } catch (e) {
     console.warn('Redirect afhandelen mislukt, oude inlogstatus wordt opgeschoond:', e);
+    if (window.toonInlogFout) window.toonInlogFout(e);
     ruimVastgelopenInlogstatusOp();
     // Belangrijk: een mislukte poging laat soms een kapot #-restje in de
     // URL staan. Zonder dit weg te halen blijft de app dat restje bij elke
@@ -78,13 +79,18 @@ function ruimVastgelopenInlogstatusOp() {
   } catch (e) { console.warn('Opschonen mislukt:', e); }
 }
 
-function inloggen() {
+async function inloggen() {
   try {
-    msalInstance.loginRedirect({ scopes: GRAPH_SCOPES });
+    await msalInstance.loginRedirect({ scopes: GRAPH_SCOPES });
   } catch (e) {
-    console.warn('Inloggen mislukt, opnieuw proberen na opschonen:', e);
+    console.warn('Inloggen mislukt bij eerste poging:', e);
     ruimVastgelopenInlogstatusOp();
-    msalInstance.loginRedirect({ scopes: GRAPH_SCOPES });
+    try {
+      await msalInstance.loginRedirect({ scopes: GRAPH_SCOPES });
+    } catch (e2) {
+      console.error('Inloggen definitief mislukt:', e2);
+      if (window.toonInlogFout) window.toonInlogFout(e2);
+    }
   }
 }
 
