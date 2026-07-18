@@ -136,20 +136,38 @@ async function zoekEnOpenPdf(mapKey, bonnrOfZoekterm) {
   window.open(gevonden.webUrl, '_blank');
 }
 
-// Zoekt alle bestanden (offertes/facturen/reparatiebonnen) die bij een klant horen
+// Zoekt alle bestanden (offertes/facturen/reparatiebonnen) die bij een klant horen.
+// Bestandsnamen volgen bij Rozal het patroon "Achternaam_Woonplaats.pdf" (of
+// vergelijkbaar). Als we alléén op achternaam zouden filteren, krijgt elke
+// "Jansen" de documenten van ALLE Jansens in het systeem te zien — daarom
+// wordt hier ook verplicht op woonplaats gefilterd.
 async function zoekBestandenVoorKlant(klant) {
   const achternaam = (klant.achternaam || klant.bedrijf || '').trim();
+  const plaats = (klant.plaats || '').trim();
   if (!achternaam) return [];
+
+  const zoekterm = plaats ? `${achternaam} ${plaats}` : achternaam;
   const resultaten = [];
   for (const key of Object.keys(CONFIG.docMappen)) {
     try {
       const mapPad = CONFIG.docPad + '/' + CONFIG.docMappen[key];
-      const data = await graphGet(`/sites/${CONFIG.spHost}/drive/root:/${encodeURIComponent(mapPad).replace(/%2F/g, '/')}:/search(q='${encodeURIComponent(achternaam)}')?$top=15&$select=name,webUrl,lastModifiedDateTime`);
-      (data.value || []).filter(f => f.name?.toLowerCase().endsWith('.pdf')).forEach(f => {
-        resultaten.push({ type: key, naam: f.name, webUrl: f.webUrl, datum: f.lastModifiedDateTime });
-      });
+      const data = await graphGet(`/sites/${CONFIG.spHost}/drive/root:/${encodeURIComponent(mapPad).replace(/%2F/g, '/')}:/search(q='${encodeURIComponent(zoekterm)}')?$top=25&$select=name,webUrl,lastModifiedDateTime`);
+      (data.value || [])
+        .filter(f => f.name?.toLowerCase().endsWith('.pdf'))
+        .filter(f => bestandHoortBijKlant(f.name, achternaam, plaats))
+        .forEach(f => resultaten.push({ type: key, naam: f.name, webUrl: f.webUrl, datum: f.lastModifiedDateTime }));
     } catch (e) { console.warn('Bestanden zoeken mislukt voor', key, e); }
   }
   resultaten.sort((a, b) => new Date(b.datum) - new Date(a.datum));
   return resultaten;
+}
+
+// Extra controle ná de zoekopdracht: de bestandsnaam moet zowel de
+// achternaam ALS (indien bekend) de woonplaats bevatten. Dit voorkomt dat
+// een gelijknamige klant uit een andere plaats meegenomen wordt.
+function bestandHoortBijKlant(bestandsnaam, achternaam, plaats) {
+  const naamLower = bestandsnaam.toLowerCase();
+  if (achternaam && !naamLower.includes(achternaam.toLowerCase())) return false;
+  if (plaats && !naamLower.includes(plaats.toLowerCase())) return false;
+  return true;
 }

@@ -23,7 +23,11 @@ function maandagVan(d) {
   const dt = new Date(d); const dag = (dt.getDay() + 6) % 7;
   dt.setDate(dt.getDate() - dag); dt.setHours(0,0,0,0); return dt;
 }
-function isoDatum(d) { return d.toISOString().substring(0,10); }
+// Belangrijk: GEEN toISOString() gebruiken hiervoor — dat rekent om naar
+// Greenwich-tijd (UTC) en laat daardoor elke dag één dag opschuiven zodra
+// Nederland in de zomertijd staat. We bouwen de datumtekst daarom zelf op
+// uit de lokale (Nederlandse) datumonderdelen.
+function isoDatum(d) { return `${d.getFullYear()}-${pad2(d.getMonth()+1)}-${pad2(d.getDate())}`; }
 function zelfdeD(a, b) { return isoDatum(a) === isoDatum(b); }
 
 // ── Opstarten na login ──────────────────────────────────────
@@ -166,15 +170,20 @@ async function toonKlantDetail(idx) {
       document.getElementById('ok-bestanden').innerHTML = '<div class="leeg-melding">Geen bestanden gevonden</div>';
       return;
     }
-    document.getElementById('ok-bestanden').innerHTML = bestanden.map(b => {
+    const stipKleur = { Reparatiebonnen:'#C0392B', Offertes:'#E8820C', Facturen:'#2D5016' };
+    document.getElementById('ok-bestanden').innerHTML = '<div class="tijdlijn">' + bestanden.map(b => {
       const icon = iconMap[b.type] || ['📄', '#EAF0E1'];
-      const datumStr = b.datum ? new Date(b.datum).toLocaleDateString('nl-NL') : '';
-      return `<div class="card" onclick="window.open('${b.webUrl}', '_blank')">
-        <div class="bestand-icon" style="background:${icon[1]}">${icon[0]}</div>
-        <div class="plan-info"><div class="bestand-naam">${escapeHtml(b.naam)}</div><div class="bestand-sub">${b.type}${datumStr ? ' · ' + datumStr : ''}</div></div>
-        <div class="klant-pijl">›</div>
+      const datumStr = b.datum ? new Date(b.datum).toLocaleDateString('nl-NL', { day:'numeric', month:'long', year:'numeric' }) : 'Datum onbekend';
+      return `<div class="tijdlijn-item" onclick="window.open('${b.webUrl}', '_blank')">
+        <div class="tijdlijn-stip" style="background:${stipKleur[b.type] || '#888'}"></div>
+        <div class="tijdlijn-datum">${datumStr}</div>
+        <div class="tijdlijn-kaart">
+          <div class="bestand-icon" style="background:${icon[1]}">${icon[0]}</div>
+          <div class="plan-info"><div class="tijdlijn-naam">${escapeHtml(b.naam)}</div><div class="tijdlijn-type">${b.type}</div></div>
+          <div class="klant-pijl">›</div>
+        </div>
       </div>`;
-    }).join('');
+    }).join('') + '</div>';
   } catch (e) {
     document.getElementById('ok-bestanden').innerHTML = '<div class="leeg-melding">Zoeken mislukt: ' + escapeHtml(vertaalFout(e)) + '</div>';
   }
