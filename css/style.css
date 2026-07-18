@@ -106,6 +106,17 @@ body {
 .detail-waarde { flex:1; color:var(--tekst); }
 .detail-waarde a { color:var(--groen); }
 .sectie-label { font-size:11.5px; font-weight:700; text-transform:uppercase; letter-spacing:0.6px; color:var(--tekst-grijs); margin:18px 0 8px 2px; }
+
+/* Tijdlijn (bestanden bij een klant) */
+.tijdlijn { position:relative; padding-left:22px; }
+.tijdlijn::before { content:''; position:absolute; left:5px; top:6px; bottom:6px; width:2px; background:var(--lijn); }
+.tijdlijn-item { position:relative; margin-bottom:14px; cursor:pointer; }
+.tijdlijn-item:last-child { margin-bottom:0; }
+.tijdlijn-stip { position:absolute; left:-22px; top:3px; width:12px; height:12px; border-radius:50%; border:2px solid var(--wit); box-shadow:0 0 0 1px var(--lijn); }
+.tijdlijn-datum { font-size:11px; color:var(--tekst-grijs); font-weight:600; margin-bottom:3px; }
+.tijdlijn-kaart { background:var(--wit); border:1px solid var(--lijn); border-radius:12px; padding:11px 13px; display:flex; align-items:center; gap:10px; }
+.tijdlijn-naam { font-size:13px; font-weight:600; }
+.tijdlijn-type { font-size:11px; color:var(--tekst-grijs); margin-top:1px; }
 .bestand-icon { width:34px; height:34px; border-radius:8px; display:flex; align-items:center; justify-content:center; font-size:15px; flex-shrink:0; }
 .bestand-naam { font-size:13.5px; font-weight:600; }
 .bestand-sub { font-size:11.5px; color:var(--tekst-grijs); margin-top:1px; }
