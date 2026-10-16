@@ -520,6 +520,39 @@ function inmeetFoutTekst(e) {
   return (e && e.message) || 'Onbekende fout';
 }
 
+// Nieuwe rij [naam, datum, "nieuw"] onderaan overzicht_inmeten.xlsx (blad "Blad1")
+async function inmeetRegistreerInOverzicht(mapUrl, naam, datumTekst) {
+  let itemId = null;
+  try {
+    const r = await graphGet(`${mapUrl}/overzicht_inmeten.xlsx`);
+    itemId = r && r.id;
+  } catch (e) { /* hieronder zoeken */ }
+  if (!itemId) {
+    const zoek = await graphGet(`/sites/${CONFIG.spHost}/drive/root/search(q='overzicht_inmeten.xlsx')`);
+    const f = (zoek.value || []).find(x => x.name === 'overzicht_inmeten.xlsx');
+    itemId = f && f.id;
+  }
+  if (!itemId) throw new Error('overzicht_inmeten.xlsx niet gevonden');
+
+  const blad = `/sites/${CONFIG.spHost}/drive/items/${itemId}/workbook/worksheets/Blad1`;
+  const bereik = await graphGet(`${blad}/usedRange(valuesOnly=true)`);
+  const vals = bereik.values || [];
+  let laatste = 0;
+  vals.forEach((r, i) => { if (r && String(r[0] == null ? '' : r[0]).trim()) laatste = i + 1; });
+
+  const waarden = [];
+  let start;
+  if (laatste === 0) { waarden.push(['Naam', 'Datum', 'Status']); start = 1; }
+  else start = laatste + 1;
+  waarden.push([naam, datumTekst, 'nieuw']);
+  const eind = start + waarden.length - 1;
+  // Tekstformaat, zodat Excel de datum niet omzet naar een getal
+  const formaat = waarden.map(() => ['@', '@', '@']);
+
+  await graphSchrijf('PATCH', `${blad}/range(address='A${start}:C${eind}')`,
+    JSON.stringify({ numberFormat: formaat, values: waarden }), 'application/json');
+}
+
 // Excel (+ foto's) naar SharePoint. De Excel komt direct in Inmeetdocumenten
 // (de Windows-app zoekt daar), de foto's in een eigen submap.
 async function inmeetUpload(c) {
@@ -544,6 +577,13 @@ async function inmeetUpload(c) {
   const xlsx = maakInmeetXlsx(data, nu);
   await graphSchrijf('PUT', `${mapUrl}/${encodeURIComponent(bestand)}:/content`, xlsx,
     'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+
+  // In overzicht_inmeten.xlsx zetten (naam, datum, status "nieuw"). Mislukt dit, dan blijft de
+  // upload geslaagd — de Windows-app vult het bij verversen zelf aan.
+  try {
+    const datumTekst = `${pad2(nu.getDate())}-${pad2(nu.getMonth() + 1)}-${nu.getFullYear()} ${pad2(nu.getHours())}:${pad2(nu.getMinutes())}:${pad2(nu.getSeconds())}`;
+    await inmeetRegistreerInOverzicht(mapUrl, data.naam, datumTekst);
+  } catch (e) { console.warn('Overzicht bijwerken mislukt:', e); }
 
   // Foto's (als de upload mislukt blijft de Excel gewoon staan)
   let fotosMislukt = 0;
