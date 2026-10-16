@@ -4,7 +4,7 @@
 // zonder internet meteen verschijnen. Data komt ALTIJD live uit
 // SharePoint — die wordt hier nooit gecachet.
 // ══════════════════════════════════════════════════════════════
-const CACHE_NAAM = 'rozal-inzien-v3';
+const CACHE_NAAM = 'rozal-inzien-v4';
 const APP_SHELL = [
   './',
   './index.html',
@@ -15,6 +15,8 @@ const APP_SHELL = [
   './js/graph.js',
   './js/data.js',
   './js/app.js',
+  './js/inmeten-excel.js',
+  './js/inmeten.js',
   './js/msal-browser.min.js',
   './icons/icon-192.png',
   './icons/icon-512.png',
