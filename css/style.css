@@ -142,4 +142,34 @@ body {
 .spinner { width:26px; height:26px; border:3px solid var(--lijn); border-top-color:var(--groen); border-radius:50%; animation:spin 0.8s linear infinite; }
 @keyframes spin { to { transform:rotate(360deg); } }
 
+/* ── INMETEN ── */
+.im-nieuw { background:var(--oranje); color:#fff; border-radius:12px; padding:14px; text-align:center; font-weight:700; font-size:15px; cursor:pointer; margin-bottom:6px; }
+.im-wis { width:30px; height:30px; border-radius:50%; display:flex; align-items:center; justify-content:center; color:var(--tekst-grijs); font-size:14px; flex-shrink:0; }
+.im-kaart { background:var(--wit); border:1px solid var(--lijn); border-radius:14px; padding:14px 16px 16px; margin-bottom:14px; }
+.im-kop { font-size:12px; font-weight:700; text-transform:uppercase; letter-spacing:0.6px; color:var(--groen); margin-bottom:4px; }
+.im-kop-rij { display:flex; align-items:center; justify-content:space-between; }
+.im-acties { display:flex; gap:8px; }
+.im-mini { width:30px; height:30px; border-radius:50%; background:var(--creme); border:1px solid var(--lijn); display:flex; align-items:center; justify-content:center; font-size:14px; color:var(--groen); cursor:pointer; }
+.im-lbl { display:block; font-size:12px; font-weight:600; color:var(--tekst-grijs); margin:11px 0 4px; }
+.im-inp { width:100%; box-sizing:border-box; background:var(--creme); border:1px solid var(--lijn); border-radius:10px; padding:11px 12px; font-size:16px; font-family:inherit; color:var(--tekst); -webkit-appearance:none; appearance:none; }
+select.im-inp { background-image:linear-gradient(45deg,transparent 50%,#888 50%),linear-gradient(135deg,#888 50%,transparent 50%); background-position:calc(100% - 18px) 50%,calc(100% - 13px) 50%; background-size:5px 5px,5px 5px; background-repeat:no-repeat; padding-right:32px; }
+textarea.im-inp { resize:vertical; }
+.im-check { display:flex; align-items:center; gap:8px; font-size:14px; font-weight:600; color:var(--groen); margin:14px 0 2px; background:var(--groen-licht); padding:10px 12px; border-radius:10px; }
+.im-check input { width:18px; height:18px; }
+.im-knop-sec { text-align:center; padding:13px; border:2px dashed var(--oranje); color:var(--oranje); border-radius:12px; font-weight:700; font-size:14px; cursor:pointer; margin-bottom:100px; }
+.im-resultaten { border:1px solid var(--lijn); border-radius:10px; margin-top:6px; overflow:hidden; }
+.im-resultaat { padding:9px 12px; font-size:13px; border-bottom:1px solid var(--creme); cursor:pointer; }
+.im-resultaat:last-child { border-bottom:none; }
+.im-resultaat span { color:var(--tekst-grijs); font-size:12px; }
+.im-fotos { display:flex; flex-wrap:wrap; gap:8px; margin-top:12px; }
+.im-foto { position:relative; width:72px; height:72px; }
+.im-foto img { width:100%; height:100%; object-fit:cover; border-radius:8px; border:1px solid var(--lijn); }
+.im-foto-x { position:absolute; top:-6px; right:-6px; width:22px; height:22px; border-radius:50%; background:#C0392B; color:#fff; font-size:11px; display:flex; align-items:center; justify-content:center; cursor:pointer; }
+.im-foto-knop { display:block; text-align:center; margin-top:12px; padding:11px; border-radius:10px; background:var(--creme); border:1px solid var(--lijn); color:var(--groen); font-weight:600; font-size:14px; cursor:pointer; }
+.im-verstuurbalk { position:absolute; left:0; right:0; bottom:0; padding:12px 18px calc(12px + env(safe-area-inset-bottom)); background:linear-gradient(to top, var(--creme) 70%, rgba(245,243,238,0)); }
+.im-verstuur { background:var(--groen); color:#fff; text-align:center; padding:15px; border-radius:12px; font-weight:700; font-size:15px; cursor:pointer; box-shadow:0 4px 14px rgba(45,80,22,0.3); }
+.im-verstuur.laden { opacity:0.6; pointer-events:none; }
+#im-toast { position:fixed; left:50%; bottom:90px; transform:translateX(-50%) translateY(20px); background:var(--groen); color:#fff; padding:12px 18px; border-radius:24px; font-size:13.5px; font-weight:600; opacity:0; pointer-events:none; transition:all .25s; z-index:200; max-width:88%; text-align:center; }
+#im-toast.toon { opacity:1; transform:translateX(-50%) translateY(0); }
+
 ::-webkit-scrollbar { display:none; }
