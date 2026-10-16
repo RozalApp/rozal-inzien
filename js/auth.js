@@ -6,7 +6,7 @@
 // tijdelijk toegangsbewijs (token) dat automatisch ververst wordt.
 // ══════════════════════════════════════════════════════════════
 
-const GRAPH_SCOPES = ['User.Read', 'Sites.Read.All', 'Files.Read.All'];
+const GRAPH_SCOPES = ['User.Read', 'Sites.Read.All', 'Files.Read.All', 'Files.ReadWrite.All'];
 
 const msalConfig = {
   auth: {

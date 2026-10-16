@@ -39,6 +39,7 @@ async function startApp() {
   renderWeekStrip();
   renderKlanten();
   renderReparatiebonnen();
+  inmeetInit();
 }
 
 // ── Tabs ──────────────────────────────────────────────────
@@ -48,6 +49,7 @@ function switchTab(naam) {
   document.getElementById('page-' + naam).classList.add('active');
   document.getElementById('tab-' + naam).classList.add('active');
   document.querySelector('.screen-content').scrollTop = 0;
+  if (naam === 'inmeten' && typeof inmeetTabOpen === 'function') inmeetTabOpen();
 }
 
 // ── PLANNING: weekstrip + dagoverzicht ─────────────────────
@@ -273,6 +275,7 @@ async function ververs(tabblad, knopEl) {
     if (tabblad === 'planning') { await laadPlanning(); renderWeekStrip(); }
     else if (tabblad === 'klanten') { await laadKlanten(); renderKlanten(); }
     else if (tabblad === 'reparaties') { await laadReparatiebonnen(); renderReparatiebonnen(); }
+    else if (tabblad === 'inmeten') { inmeetTabOpen(); await inmeetLaadRecent(); inmeetRenderTab(); }
   } catch (e) {
     alert('Vernieuwen mislukt: ' + vertaalFout(e));
   } finally {

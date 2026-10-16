@@ -28,6 +28,24 @@ async function _graphFetch(aanroep) {
   throw lastErr;
 }
 
+// Schrijven naar SharePoint (alleen gebruikt door het Inmeten-tabblad).
+// Bewust zonder automatisch opnieuw proberen: dan zou een bestand dubbel kunnen komen.
+async function graphSchrijf(methode, url, body, contentType) {
+  const token = await getAccessToken();
+  const resp = await fetch(`https://graph.microsoft.com/v1.0${url}`, {
+    method: methode,
+    headers: { Authorization: 'Bearer ' + token, 'Content-Type': contentType },
+    body,
+  });
+  if (!resp.ok) {
+    const err = new Error(`Graph ${resp.status}: ${url}`);
+    err.status = resp.status;
+    throw err;
+  }
+  const tekst = await resp.text();
+  return tekst ? JSON.parse(tekst) : null;
+}
+
 async function graphGet(url) {
   return _graphFetch(async () => {
     const token = await getAccessToken();
