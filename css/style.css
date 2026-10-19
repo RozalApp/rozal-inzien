@@ -6,11 +6,14 @@
   --creme:#F5F3EE; --wit:#FFFFFF; --tekst:#1A1A1A; --tekst-grijs:#888; --lijn:#E0E8D0;
 }
 * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
-html, body { height:100%; overscroll-behavior:none; }
+html { height:100%; background:var(--creme); }
+html, body { overscroll-behavior:none; }
 body {
   font-family:'DM Sans',sans-serif; background:var(--creme); color:var(--tekst);
   display:flex; flex-direction:column; overflow:hidden;
-  height:100dvh;
+  /* Vast aan alle vier de schermranden: zo vult de app ook als beginscherm-app het hele scherm,
+     tot onder de home-indicator (100% / 100vh stopte op iOS te vroeg). */
+  position:fixed; top:0; left:0; right:0; bottom:0;
   /* Onderkant: geen safe-area padding hier — de tabbalk heeft die zelf al (anders staat er dubbel ruimte onder) */
   padding-top:env(safe-area-inset-top); padding-bottom:0;
 }
