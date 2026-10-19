@@ -10,7 +10,9 @@ html, body { height:100%; overscroll-behavior:none; }
 body {
   font-family:'DM Sans',sans-serif; background:var(--creme); color:var(--tekst);
   display:flex; flex-direction:column; overflow:hidden;
-  padding-top:env(safe-area-inset-top); padding-bottom:env(safe-area-inset-bottom);
+  height:100dvh;
+  /* Onderkant: geen safe-area padding hier — de tabbalk heeft die zelf al (anders staat er dubbel ruimte onder) */
+  padding-top:env(safe-area-inset-top); padding-bottom:0;
 }
 
 /* LOGIN */
