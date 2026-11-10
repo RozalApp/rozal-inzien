@@ -20,7 +20,7 @@
 <div class="login-screen" id="login-shell">
   <div class="login-logo"><img src="icons/icon-192.png" alt="Rozal"></div>
   <div class="login-titel">Rozal Kantoor</div>
-  <div class="login-sub">Planning · Klanten · Reparaties · Inmeten</div>
+  <div class="login-sub">Planning · Klanten · Reparaties · Inmeten · Foto's</div>
   <div class="ms-btn" id="login-btn" onclick="inloggen()">
     <div class="ms-logo"><div></div><div></div><div></div><div></div></div>
     Inloggen met Microsoft
@@ -104,6 +104,24 @@
       </div>
     </div>
 
+    <!-- FOTO'S -->
+    <div class="page" id="page-fotos">
+      <div class="app-topbar">
+        <div><div class="app-titel">Opleverfoto's</div><div class="app-sub" id="fotos-sub">—</div></div>
+        <div class="topbar-rechts">
+          <div class="refresh-btn" id="refresh-fotos" onclick="ververs('fotos', this)" title="Vernieuwen">⟳</div>
+          <div class="avatar" onclick="uitloggen()" title="Uitloggen"></div>
+        </div>
+      </div>
+      <div class="zoekbalk-wrap"><div class="zoekbalk">🔍 <input id="fotos-zoek" placeholder="Zoek op klantnaam..." oninput="fotosRender()"></div></div>
+      <div class="foto-filters">
+        <label>Van <input type="date" id="fotos-van" onchange="fotosRender()"></label>
+        <label>Tot <input type="date" id="fotos-tot" onchange="fotosRender()"></label>
+        <div class="chip" onclick="fotosWisFilters()">Wis</div>
+      </div>
+      <div class="dag-blok" style="padding-top:0" id="fotos-lijst"><div class="laad-scherm"><div class="spinner"></div><div>Foto's laden...</div></div></div>
+    </div>
+
   </div><!-- /screen-content -->
 
   <div class="tab-bar">
@@ -111,6 +129,7 @@
     <div class="tab-item" id="tab-klanten" onclick="switchTab('klanten')"><div class="tab-icon">👥</div><div class="tab-label">Klanten</div></div>
     <div class="tab-item" id="tab-reparaties" onclick="switchTab('reparaties')"><div class="tab-icon">🔧</div><div class="tab-label">Reparaties</div></div>
     <div class="tab-item" id="tab-inmeten" onclick="switchTab('inmeten')"><div class="tab-icon">📐</div><div class="tab-label">Inmeten</div></div>
+    <div class="tab-item" id="tab-fotos" onclick="switchTab('fotos')"><div class="tab-icon">📷</div><div class="tab-label">Foto's</div></div>
   </div>
 </div><!-- /app-shell -->
 
@@ -150,6 +169,16 @@
   <div class="im-verstuurbalk"><div class="im-verstuur" id="im-verstuur" onclick="inmeetVerstuur()">📤 Versturen naar kantoor</div></div>
 </div>
 
+<!-- FOTO VIEWER -->
+<div class="foto-viewer" id="foto-viewer">
+  <div class="foto-viewer-sluit" onclick="fotoSluitViewer()">✕</div>
+  <div class="foto-viewer-nav links" onclick="fotoViewerVolgende(-1)">‹</div>
+  <div class="foto-viewer-nav rechts" onclick="fotoViewerVolgende(1)">›</div>
+  <div id="foto-viewer-status" class="foto-viewer-status"></div>
+  <img id="foto-viewer-img" alt="">
+  <div id="foto-viewer-titel" class="foto-viewer-titel"></div>
+</div>
+
 <!-- BOTTOM SHEET: afspraak detail -->
 <div class="sheet-backdrop" id="sheet-backdrop" onclick="sluitSheet()"></div>
 <div class="sheet" id="afspraak-sheet">
@@ -165,6 +194,7 @@
 <script src="js/app.js"></script>
 <script src="js/inmeten-excel.js"></script>
 <script src="js/inmeten.js"></script>
+<script src="js/fotos.js"></script>
 <script>
 function escapeHtmlLocal(s) { return String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
 
