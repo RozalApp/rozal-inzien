@@ -197,3 +197,16 @@ textarea.im-inp { resize:vertical; }
 .foto-viewer-nav.links { left:0; } .foto-viewer-nav.rechts { right:0; }
 .foto-viewer-status { color:#ddd; font-size:14px; position:absolute; }
 .foto-viewer-titel { color:#ddd; font-size:12px; margin-top:12px; padding:0 16px; text-align:center; }
+
+/* ── Boekingen ── */
+.boek-za-kaart { background:#fff; border:1px solid var(--lijn); border-radius:12px; padding:12px 14px; }
+.boek-za-knop { background:#C0392B; color:#fff; font-weight:700; font-size:14px; text-align:center; padding:12px; border-radius:10px; cursor:pointer; }
+.boek-za-knop.uit { background:#bbb; pointer-events:none; }
+.boek-za-status { font-size:12px; color:var(--tekst-grijs); margin-top:8px; text-align:center; min-height:15px; }
+.boek-kaart { display:block; cursor:default; }
+.boek-kop { display:flex; align-items:center; gap:10px; }
+.boek-details { margin-top:10px; padding-top:8px; border-top:1px solid var(--lijn); }
+.boek-regel { display:flex; gap:8px; font-size:12px; padding:2px 0; }
+.boek-regel > span { color:var(--tekst-grijs); width:74px; flex-shrink:0; }
+.boek-regel a { color:var(--groen); font-weight:600; text-decoration:none; word-break:break-all; }
+.tab-label { white-space:nowrap; }
