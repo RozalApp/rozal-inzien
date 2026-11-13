@@ -4,7 +4,7 @@
 // zonder internet meteen verschijnen. Data komt ALTIJD live uit
 // SharePoint — die wordt hier nooit gecachet.
 // ══════════════════════════════════════════════════════════════
-const CACHE_NAAM = 'rozal-inzien-v6';
+const CACHE_NAAM = 'rozal-inzien-v7';
 const APP_SHELL = [
   './',
   './index.html',
@@ -53,7 +53,7 @@ self.addEventListener('fetch', event => {
   // zodat een nieuwe upload direct zichtbaar is. Cache is puur een reserve
   // voor het geval er geen internet is.
   event.respondWith(
-    fetch(event.request)
+    fetch(event.request, { cache: 'no-cache' })   // omzeil de browser-/GitHub-cache: altijd de nieuwste versie ophalen
       .then(resp => {
         const kopie = resp.clone();
         caches.open(CACHE_NAAM).then(cache => cache.put(event.request, kopie));
