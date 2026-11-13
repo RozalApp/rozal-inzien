@@ -82,7 +82,10 @@ function boekingenRender() {
   sub.textContent = `${komend.length} komend${komend.length === 1 ? 'e boeking' : 'e boekingen'}`;
   const items = boekFilter === 'komend' ? komend : eerder;
   if (!items.length) {
-    lijst.innerHTML = `<div class="leeg-dag">${boekFilter === 'komend' ? 'Geen komende boekingen' : 'Geen eerdere boekingen'}</div>`;
+    const hint = alleAfspraken.length
+      ? `<div style="font-size:11px;margin-top:6px">(planning geladen: ${alleAfspraken.length} afspraken, daarvan ${alle.length} online/showroom)</div>`
+      : `<div style="font-size:11px;margin-top:6px">De planning is nog niet geladen — tik op ⟳ rechtsboven.</div>`;
+    lijst.innerHTML = `<div class="leeg-dag">${boekFilter === 'komend' ? 'Geen komende boekingen' : 'Geen eerdere boekingen'}${hint}</div>`;
     return;
   }
 
@@ -164,7 +167,7 @@ async function boekingenZaterdagDicht() {
 
   // Staan er al boekingen op die dag? Die blijven staan — dat zeggen we erbij.
   const reedsGeboekt = alleAfspraken.filter(a => a.datum === iso && boekIsBoeking(a)).length;
-  let vraag = `Weet je het zeker?\n\nZaterdag ${boekDagNaam(iso)} wordt de hele dag dichtgezet voor online boeken.`;
+  let vraag = `Weet je het zeker?\n\n${boekDagNaam(iso)} wordt de hele dag dichtgezet voor online boeken.`;
   if (reedsGeboekt) vraag += `\n\nLet op: er staan al ${reedsGeboekt} boeking${reedsGeboekt === 1 ? '' : 'en'} op die dag. Die blijven staan.`;
   if (!confirm(vraag)) return;
 
@@ -192,7 +195,7 @@ async function boekingenZaterdagDicht() {
     const controle = await boekHaalGeblokkeerd();
     if (!controle.some(g => g.type === 'dag' && boekBlokIso(g.datum) === iso)) throw new Error('Zaterdag stond na opslaan niet in de lijst');
     status.textContent = `✅ Zaterdag ${boekKort(iso)} is dichtgezet voor online boeken.`;
-    alert(`Zaterdag ${boekDagNaam(iso)} is dichtgezet.`);
+    alert(`${boekDagNaam(iso)} is dichtgezet.`);
   } catch (e) {
     console.error('Zaterdag dichtzetten mislukt:', e);
     knop.classList.remove('uit');
@@ -202,4 +205,44 @@ async function boekingenZaterdagDicht() {
   } finally {
     boekZaterdagBezig = false;
   }
+}
+
+
+// ── Zelfstandig: eigen opmaak + koppeling aan de tab ───────────
+// (zodat het ook werkt als style.css of app.js nog in een oude versie in de cache staan)
+(function() {
+  const css = `
+  .boek-za-kaart { background:#fff; border:1px solid #E0E8D0; border-radius:12px; padding:12px 14px; }
+  .boek-za-knop { background:#C0392B; color:#fff; font-weight:700; font-size:14px; text-align:center; padding:13px; border-radius:10px; cursor:pointer; -webkit-tap-highlight-color:transparent; user-select:none; }
+  .boek-za-knop:active { opacity:.85; }
+  .boek-za-knop.uit { background:#bbb; pointer-events:none; }
+  .boek-za-status { font-size:12px; color:#888; margin-top:8px; text-align:center; min-height:15px; }
+  .boek-kaart { display:block; cursor:default; }
+  .boek-kop { display:flex; align-items:center; gap:10px; }
+  .boek-details { margin-top:10px; padding-top:8px; border-top:1px solid #E0E8D0; }
+  .boek-regel { display:flex; gap:8px; font-size:12px; padding:2px 0; }
+  .boek-regel > span { color:#888; width:74px; flex-shrink:0; }
+  .boek-regel a { color:#2D5016; font-weight:600; text-decoration:none; word-break:break-all; }
+  .tab-label { white-space:nowrap; }`;
+  const st = document.createElement('style');
+  st.textContent = css;
+  document.head.appendChild(st);
+
+  document.addEventListener('click', function(e) {
+    const tab = e.target.closest && e.target.closest('#tab-boekingen');
+    if (tab) setTimeout(function() {
+      document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+      document.querySelectorAll('.tab-item').forEach(t => t.classList.remove('active'));
+      document.getElementById('page-boekingen').classList.add('active');
+      tab.classList.add('active');
+      boekingenTabOpen();
+    }, 0);
+  });
+})();
+
+async function boekingenVerversKnop(el) {
+  el.classList.add('laden');
+  try { await boekingenVervers(); }
+  catch (e) { alert('Vernieuwen mislukt: ' + (typeof vertaalFout === 'function' ? vertaalFout(e) : e)); }
+  finally { el.classList.remove('laden'); }
 }
