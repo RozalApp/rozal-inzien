@@ -51,6 +51,7 @@ function switchTab(naam) {
   document.querySelector('.screen-content').scrollTop = 0;
   if (naam === 'inmeten' && typeof inmeetTabOpen === 'function') inmeetTabOpen();
   if (naam === 'fotos' && typeof fotosTabOpen === 'function') fotosTabOpen();
+  if (naam === 'boekingen' && typeof boekingenTabOpen === 'function') boekingenTabOpen();
 }
 
 // ── PLANNING: weekstrip + dagoverzicht ─────────────────────
@@ -277,6 +278,7 @@ async function ververs(tabblad, knopEl) {
     else if (tabblad === 'klanten') { await laadKlanten(); renderKlanten(); }
     else if (tabblad === 'reparaties') { await laadReparatiebonnen(); renderReparatiebonnen(); }
     else if (tabblad === 'fotos') { await fotosVervers(); }
+    else if (tabblad === 'boekingen') { await boekingenVervers(); }
     else if (tabblad === 'inmeten') { inmeetTabOpen(); await inmeetLaadRecent(); inmeetRenderTab(); }
   } catch (e) {
     alert('Vernieuwen mislukt: ' + vertaalFout(e));
