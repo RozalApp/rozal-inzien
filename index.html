@@ -122,6 +122,28 @@
       <div class="dag-blok" style="padding-top:0" id="fotos-lijst"><div class="laad-scherm"><div class="spinner"></div><div>Foto's laden...</div></div></div>
     </div>
 
+    <!-- BOEKINGEN -->
+    <div class="page" id="page-boekingen">
+      <div class="app-topbar">
+        <div><div class="app-titel">Boekingen</div><div class="app-sub" id="boek-sub">—</div></div>
+        <div class="topbar-rechts">
+          <div class="refresh-btn" id="refresh-boekingen" onclick="ververs('boekingen', this)" title="Vernieuwen">⟳</div>
+          <div class="avatar" onclick="uitloggen()" title="Uitloggen"></div>
+        </div>
+      </div>
+      <div class="dag-blok" style="padding-bottom:0">
+        <div class="boek-za-kaart">
+          <div class="boek-za-knop" id="boek-za-knop" onclick="boekingenZaterdagDicht()">🚫 As zaterdag dichtzetten</div>
+          <div class="boek-za-status" id="boek-za-status"></div>
+        </div>
+      </div>
+      <div class="chip-filter" id="boek-chips" style="padding-top:12px">
+        <div class="chip actief" onclick="boekingenZetFilter('komend', this)">Komend</div>
+        <div class="chip" onclick="boekingenZetFilter('eerder', this)">Eerder</div>
+      </div>
+      <div class="dag-blok" style="padding-top:0" id="boek-lijst"><div class="leeg-dag">Boekingen laden…</div></div>
+    </div>
+
   </div><!-- /screen-content -->
 
   <div class="tab-bar">
@@ -129,6 +151,7 @@
     <div class="tab-item" id="tab-klanten" onclick="switchTab('klanten')"><div class="tab-icon">👥</div><div class="tab-label">Klanten</div></div>
     <div class="tab-item" id="tab-reparaties" onclick="switchTab('reparaties')"><div class="tab-icon">🔧</div><div class="tab-label">Reparaties</div></div>
     <div class="tab-item" id="tab-inmeten" onclick="switchTab('inmeten')"><div class="tab-icon">📐</div><div class="tab-label">Inmeten</div></div>
+    <div class="tab-item" id="tab-boekingen" onclick="switchTab('boekingen')"><div class="tab-icon">🗓️</div><div class="tab-label">Boekingen</div></div>
     <div class="tab-item" id="tab-fotos" onclick="switchTab('fotos')"><div class="tab-icon">📷</div><div class="tab-label">Foto's</div></div>
   </div>
 </div><!-- /app-shell -->
@@ -195,6 +218,7 @@
 <script src="js/inmeten-excel.js"></script>
 <script src="js/inmeten.js"></script>
 <script src="js/fotos.js"></script>
+<script src="js/boekingen.js"></script>
 <script>
 function escapeHtmlLocal(s) { return String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
 

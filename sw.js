@@ -4,7 +4,7 @@
 // zonder internet meteen verschijnen. Data komt ALTIJD live uit
 // SharePoint — die wordt hier nooit gecachet.
 // ══════════════════════════════════════════════════════════════
-const CACHE_NAAM = 'rozal-inzien-v5';
+const CACHE_NAAM = 'rozal-inzien-v6';
 const APP_SHELL = [
   './',
   './index.html',
@@ -18,6 +18,7 @@ const APP_SHELL = [
   './js/inmeten-excel.js',
   './js/inmeten.js',
   './js/fotos.js',
+  './js/boekingen.js',
   './js/msal-browser.min.js',
   './icons/icon-192.png',
   './icons/icon-512.png',
@@ -38,7 +39,7 @@ self.addEventListener('activate', event => {
 self.addEventListener('fetch', event => {
   const url = event.request.url;
   // Nooit cachen: Microsoft login/graph verkeer — dat moet altijd live zijn
-  if (url.includes('login.microsoftonline.com') || url.includes('graph.microsoft.com') || url.includes('sharepoint.com')) {
+  if (url.includes('login.microsoftonline.com') || url.includes('graph.microsoft.com') || url.includes('sharepoint.com') || url.includes('azurewebsites.net')) {
     return; // laat gewoon door naar het netwerk
   }
 
