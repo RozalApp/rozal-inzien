@@ -49,6 +49,8 @@ function boekBlokIso(v) {
 function boekingenTabOpen() {
   boekingenRender();
   boekingenControleerZaterdag();
+  boekBlokInit();
+  boekBlokLaad();
 }
 
 async function boekingenVervers() {
@@ -56,6 +58,7 @@ async function boekingenVervers() {
   renderWeekStrip();
   boekingenRender();
   boekingenControleerZaterdag();
+  boekBlokLaad();
 }
 
 function boekingenZetFilter(f, el) {
@@ -208,6 +211,228 @@ async function boekingenZaterdagDicht() {
 }
 
 
+// ── Dag / periode / tijdstip / tijdvak dichtzetten ────────────
+// Zelfde lijst + zelfde soorten als in de Windows-app (Boekingbeheer):
+//   dag = hele dag, slot = één tijdstip (een tijdvak wordt per half uur opgeslagen).
+let boekBlokBezig = false;
+
+function boekTijdStr(v) {
+  if (typeof v === 'number') { const m = Math.round(v * 1440); return pad2(Math.floor(m / 60) % 24) + ':' + pad2(m % 60); }
+  return String(v || '').trim().slice(0, 5);
+}
+function boekTijdMin(t) { const p = boekTijdStr(t).split(':'); return (parseInt(p[0], 10) || 0) * 60 + (parseInt(p[1], 10) || 0); }
+function boekMinStr(m) { return pad2(Math.floor(m / 60)) + ':' + pad2(m % 60); }
+function boekBlokSleutel(g) { return g.type + '|' + boekBlokIso(g.datum) + '|' + (g.type === 'slot' ? boekTijdStr(g.tijd) : ''); }
+
+function boekBlokInit() {
+  if (document.getElementById('boek-blok-kaart')) return;
+  const pagina = document.getElementById('page-boekingen');
+  const eersteBlok = pagina && pagina.querySelector('.dag-blok');
+  if (!eersteBlok) return;
+  const wrap = document.createElement('div');
+  wrap.className = 'dag-blok';
+  wrap.style.paddingBottom = '0';
+  wrap.innerHTML = `
+    <div class="boek-za-kaart" id="boek-blok-kaart">
+      <div style="font-weight:700;font-size:14px;margin-bottom:10px">🚫 Dag of tijd dichtzetten</div>
+      <label class="boek-bl-label">Wat wil je dichtzetten?</label>
+      <select id="boek-bl-type" class="boek-bl-input" onchange="boekBlokType()">
+        <option value="dag">Één dag</option>
+        <option value="periode">Meerdere dagen (van → t/m)</option>
+        <option value="slot">Eén tijdstip</option>
+        <option value="tijdvak">Tijdvak (van → tot tijd)</option>
+      </select>
+      <label class="boek-bl-label" id="boek-bl-datum-label">Datum</label>
+      <input type="date" id="boek-bl-datum" class="boek-bl-input">
+      <div id="boek-bl-tot-wrap" style="display:none">
+        <label class="boek-bl-label">Tot en met datum</label>
+        <input type="date" id="boek-bl-datum-tot" class="boek-bl-input">
+      </div>
+      <div id="boek-bl-tijd-wrap" style="display:none">
+        <label class="boek-bl-label" id="boek-bl-tijd-label">Tijdstip</label>
+        <input type="time" id="boek-bl-tijd" class="boek-bl-input" step="1800">
+      </div>
+      <div id="boek-bl-tijdtot-wrap" style="display:none">
+        <label class="boek-bl-label">Tot tijdstip</label>
+        <input type="time" id="boek-bl-tijd-tot" class="boek-bl-input" step="1800">
+      </div>
+      <label class="boek-bl-label">Omschrijving (optioneel)</label>
+      <input type="text" id="boek-bl-omschr" class="boek-bl-input" placeholder="bijv. Vakantie, Vergadering">
+      <div class="boek-za-knop" id="boek-bl-knop" style="margin-top:12px" onclick="boekBlokToevoegen()">🚫 Dichtzetten</div>
+      <div class="boek-za-status" id="boek-bl-status"></div>
+      <div style="font-weight:700;font-size:13px;margin:12px 0 6px">Nu dichtgezet</div>
+      <div id="boek-bl-lijst" style="font-size:13px;color:#888">Laden…</div>
+    </div>`;
+  eersteBlok.parentNode.insertBefore(wrap, eersteBlok.nextSibling);
+  boekBlokType();
+}
+
+function boekBlokType() {
+  const t = document.getElementById('boek-bl-type').value;
+  const toon = (id, aan) => { const e = document.getElementById(id); if (e) e.style.display = aan ? '' : 'none'; };
+  toon('boek-bl-tot-wrap', t === 'periode');
+  toon('boek-bl-tijd-wrap', t === 'slot' || t === 'tijdvak');
+  toon('boek-bl-tijdtot-wrap', t === 'tijdvak');
+  document.getElementById('boek-bl-datum-label').textContent = t === 'periode' ? 'Van datum' : 'Datum';
+  document.getElementById('boek-bl-tijd-label').textContent = t === 'tijdvak' ? 'Van tijdstip' : 'Tijdstip';
+}
+
+async function boekBlokVerstuur(lijst) {
+  const resp = await fetch(BOEKING_URL + '?actie=sla-instellingen', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ actie: 'sla-instellingen', type: 'geblokkeerd', data: lijst }),
+  });
+  if (!resp.ok) throw new Error('Opslaan mislukt (' + resp.status + ')');
+}
+
+async function boekBlokToevoegen() {
+  if (boekBlokBezig) return;
+  const type = document.getElementById('boek-bl-type').value;
+  const datum = document.getElementById('boek-bl-datum').value;
+  const datumTot = document.getElementById('boek-bl-datum-tot').value;
+  const tijd = document.getElementById('boek-bl-tijd').value;
+  const tijdTot = document.getElementById('boek-bl-tijd-tot').value;
+  const omschr = document.getElementById('boek-bl-omschr').value.trim();
+  const vandaag = isoDatum(new Date());
+
+  if (!datum) { alert('Kies een datum.'); return; }
+  if (datum < vandaag) { alert('Die datum is al geweest.'); return; }
+  if (type === 'periode') {
+    if (!datumTot) { alert('Kies de einddatum.'); return; }
+    if (datumTot < datum) { alert('De einddatum ligt vóór de begindatum.'); return; }
+  }
+  if (type === 'slot' && !tijd) { alert('Kies een tijdstip.'); return; }
+  if (type === 'tijdvak') {
+    if (!tijd || !tijdTot) { alert('Kies een begin- en eindtijd.'); return; }
+    if (boekTijdMin(tijdTot) <= boekTijdMin(tijd)) { alert('De eindtijd moet na de begintijd liggen.'); return; }
+  }
+
+  // Wat gaan we toevoegen?
+  const nieuwe = [];
+  if (type === 'dag') {
+    nieuwe.push({ type: 'dag', datum: datum, tijd: '', omschrijving: omschr });
+  } else if (type === 'periode') {
+    const [y, m, d] = datum.split('-').map(Number);
+    const dt = new Date(y, m - 1, d);
+    let iso = datum, teller = 0;
+    while (iso <= datumTot && teller < 400) {
+      nieuwe.push({ type: 'dag', datum: iso, tijd: '', omschrijving: omschr || 'Periode geblokkeerd' });
+      dt.setDate(dt.getDate() + 1); iso = isoDatum(dt); teller++;
+    }
+  } else if (type === 'slot') {
+    nieuwe.push({ type: 'slot', datum: datum, tijd: boekTijdStr(tijd), omschrijving: omschr });
+  } else {
+    for (let mnt = boekTijdMin(tijd); mnt < boekTijdMin(tijdTot); mnt += 30) {
+      nieuwe.push({ type: 'slot', datum: datum, tijd: boekMinStr(mnt), omschrijving: omschr });
+    }
+  }
+
+  boekBlokBezig = true;
+  const knop = document.getElementById('boek-bl-knop');
+  const status = document.getElementById('boek-bl-status');
+  knop.classList.add('uit');
+  status.textContent = 'Bezig met dichtzetten…';
+  try {
+    const lijst = await boekHaalGeblokkeerd();   // verse lijst: de dienst vervangt de hele lijst
+    const bestaand = new Set(lijst.map(boekBlokSleutel));
+    const echtNieuw = nieuwe.filter(g => !bestaand.has(boekBlokSleutel(g)));
+    if (!echtNieuw.length) { status.textContent = '✅ Dit stond al dicht.'; return; }
+    await boekBlokVerstuur(lijst.concat(echtNieuw));
+    const controle = await boekHaalGeblokkeerd();
+    const na = new Set(controle.map(boekBlokSleutel));
+    if (!echtNieuw.every(g => na.has(boekBlokSleutel(g)))) throw new Error('Na opslaan stond het niet volledig in de lijst');
+    status.textContent = '✅ Dichtgezet voor online boeken.';
+    document.getElementById('boek-bl-datum').value = '';
+    document.getElementById('boek-bl-datum-tot').value = '';
+    document.getElementById('boek-bl-tijd').value = '';
+    document.getElementById('boek-bl-tijd-tot').value = '';
+    document.getElementById('boek-bl-omschr').value = '';
+    boekBlokRender(controle);
+    boekingenControleerZaterdag();
+  } catch (e) {
+    console.error('Dichtzetten mislukt:', e);
+    status.textContent = '⚠️ Dichtzetten mislukt.';
+    alert('Dichtzetten is niet gelukt.\n\n' + (e && e.message ? e.message : e));
+  } finally {
+    boekBlokBezig = false;
+    knop.classList.remove('uit');
+  }
+}
+
+async function boekBlokLaad() {
+  const el = document.getElementById('boek-bl-lijst');
+  if (!el) return;
+  try { boekBlokRender(await boekHaalGeblokkeerd()); }
+  catch (e) { el.textContent = 'Kon de lijst niet laden.'; }
+}
+
+// Lijst tonen: dagen achter elkaar worden "van t/m", tijdslots achter elkaar worden één tijdvak
+function boekBlokRender(lijst) {
+  const el = document.getElementById('boek-bl-lijst');
+  if (!el) return;
+  const vandaag = isoDatum(new Date());
+  const items = lijst.map(g => ({ g, iso: boekBlokIso(g.datum), t: g.type === 'slot' ? boekTijdMin(g.tijd) : -1 }))
+    .filter(x => x.iso && x.iso >= vandaag)
+    .sort((a, b) => a.iso.localeCompare(b.iso) || a.t - b.t);
+  if (!items.length) { el.textContent = 'Niets dichtgezet.'; return; }
+
+  const groepen = [];   // { label, sleutels: [..] }
+  let i = 0;
+  while (i < items.length) {
+    const s = items[i], om = s.g.omschrijving || '';
+    const sleutels = [boekBlokSleutel(s.g)];
+    let eind = s, j = i + 1;
+    while (j < items.length) {
+      const n = items[j];
+      if (n.g.type !== s.g.type || (n.g.omschrijving || '') !== om) break;
+      if (s.g.type === 'dag') {
+        const [y, m, d] = eind.iso.split('-').map(Number);
+        const volgende = new Date(y, m - 1, d + 1);
+        if (isoDatum(volgende) !== n.iso) break;
+      } else {
+        if (n.iso !== eind.iso || n.t !== eind.t + 30) break;
+      }
+      sleutels.push(boekBlokSleutel(n.g)); eind = n; j++;
+    }
+    let label;
+    if (s.g.type === 'dag') {
+      label = '📅 ' + (sleutels.length === 1 ? boekDagNaam(s.iso) : boekKort(s.iso) + ' t/m ' + boekKort(eind.iso));
+    } else {
+      label = '🕐 ' + boekDagNaam(s.iso) + ' ' + boekMinStr(s.t) + (sleutels.length === 1 ? '' : '–' + boekMinStr(eind.t + 30));
+    }
+    if (om) label += ' — <em>' + escapeHtml(om) + '</em>';
+    groepen.push({ label, sleutels });
+    i = j;
+  }
+  el.innerHTML = groepen.map((gr, idx) =>
+    `<div class="boek-bl-rij"><span>${gr.label}</span><button onclick='boekBlokVerwijder(${JSON.stringify(gr.sleutels)})'>✕</button></div>`
+  ).join('');
+}
+
+async function boekBlokVerwijder(sleutels) {
+  if (boekBlokBezig) return;
+  if (!confirm('Weer openzetten voor online boeken?')) return;
+  boekBlokBezig = true;
+  const status = document.getElementById('boek-bl-status');
+  status.textContent = 'Bezig…';
+  try {
+    const lijst = await boekHaalGeblokkeerd();
+    const weg = new Set(sleutels);
+    await boekBlokVerstuur(lijst.filter(g => !weg.has(boekBlokSleutel(g))));
+    const controle = await boekHaalGeblokkeerd();
+    if (controle.some(g => weg.has(boekBlokSleutel(g)))) throw new Error('Verwijderen is niet gelukt');
+    status.textContent = '✅ Weer open voor online boeken.';
+    boekBlokRender(controle);
+    boekingenControleerZaterdag();
+  } catch (e) {
+    status.textContent = '⚠️ Mislukt.';
+    alert('Weer openzetten is niet gelukt.\n\n' + (e && e.message ? e.message : e));
+  } finally {
+    boekBlokBezig = false;
+  }
+}
+
 // ── Zelfstandig: eigen opmaak + koppeling aan de tab ───────────
 // (zodat het ook werkt als style.css of app.js nog in een oude versie in de cache staan)
 (function() {
@@ -223,7 +448,12 @@ async function boekingenZaterdagDicht() {
   .boek-regel { display:flex; gap:8px; font-size:12px; padding:2px 0; }
   .boek-regel > span { color:#888; width:74px; flex-shrink:0; }
   .boek-regel a { color:#2D5016; font-weight:600; text-decoration:none; word-break:break-all; }
-  .tab-label { white-space:nowrap; }`;
+  .tab-label { white-space:nowrap; }
+  .boek-bl-label { display:block; font-size:12px; color:#888; margin:10px 0 4px; }
+  .boek-bl-input { width:100%; box-sizing:border-box; font-size:16px; padding:10px; border:1px solid #D5DEC5; border-radius:8px; background:#fff; color:#222; min-height:42px; -webkit-appearance:none; appearance:none; }
+  .boek-bl-rij { display:flex; align-items:center; gap:8px; padding:8px 10px; background:#F6F9F0; border:1px solid #E0E8D0; border-radius:8px; margin-bottom:6px; color:#222; }
+  .boek-bl-rij span { flex:1; }
+  .boek-bl-rij button { background:none; border:none; color:#C0392B; font-size:18px; padding:2px 8px; cursor:pointer; }`;
   const st = document.createElement('style');
   st.textContent = css;
   document.head.appendChild(st);
