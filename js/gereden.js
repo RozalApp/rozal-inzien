@@ -12,6 +12,7 @@
 
 const GER_THUIS   = [51.754438, 5.264027];          // Rozal, Hedel
 const GER_GEO_KEY = 'rozal_ger_geo_v1';
+const GER_CARTO_KEY = 'cb1_3z5c_1_be77fbdb54977681c5964642';   // Carto-kaartsleutel (alleen voor kaarttegels)
 const GER_TYPE_KLEUR = { Montage: '#2D5016', Reparatie: '#C0392B', Onbekend: '#7f8c8d' };
 
 let gerRijen = [];
@@ -265,7 +266,8 @@ function gerKaartInit() {
   const el = document.getElementById('ger-kaart');
   if (!el) return;
   gerKaart = L.map('ger-kaart', { zoomControl: true, attributionControl: true }).setView(GER_THUIS, 10);
-  L.tileLayer('https://basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
+  // Zelfde Carto-kaartsleutel als in de Windows-app (src/js/config.js: cartoApiKey)
+  L.tileLayer('https://basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png?key=' + GER_CARTO_KEY, {
     attribution: '© OpenStreetMap © CARTO', maxZoom: 19,
   }).addTo(gerKaart);
   const thuis = L.divIcon({
@@ -275,6 +277,64 @@ function gerKaartInit() {
   });
   gerThuisMarker = L.marker(GER_THUIS, { icon: thuis, zIndexOffset: 9999 }).bindTooltip('Rozal, Hedel').addTo(gerKaart);
   gerKaart.on('click', () => { gerActief = null; gerRender(); });
+
+  // Knop "Mijn locatie" rechtsboven op de kaart
+  const LocatieKnop = L.Control.extend({
+    options: { position: 'topright' },
+    onAdd: function() {
+      const knop = L.DomUtil.create('div', 'ger-loc-btn');
+      knop.innerHTML = '📍';
+      knop.title = 'Naar mijn locatie';
+      L.DomEvent.disableClickPropagation(knop);
+      L.DomEvent.on(knop, 'click', gerMijnLocatie);
+      return knop;
+    },
+  });
+  gerKaart.addControl(new LocatieKnop());
+}
+
+// ── Mijn huidige locatie ──────────────────────────────────────
+let gerMijnPunt = null, gerMijnCirkel = null, gerWatchId = null, gerEersteFix = true;
+
+function gerToonMijnLocatie(lat, lon, nauw) {
+  if (!gerKaart) return;
+  if (!gerMijnPunt) {
+    const icon = L.divIcon({
+      className: '',
+      html: '<div style="width:18px;height:18px;border-radius:50%;background:#2980b9;border:3px solid #fff;box-shadow:0 0 0 3px rgba(41,128,185,.35),0 2px 6px rgba(0,0,0,.4)"></div>',
+      iconSize: [18, 18], iconAnchor: [9, 9],
+    });
+    gerMijnPunt = L.marker([lat, lon], { icon, zIndexOffset: 9000 }).bindTooltip('Jouw locatie').addTo(gerKaart);
+    gerMijnCirkel = L.circle([lat, lon], { radius: nauw || 30, color: '#2980b9', weight: 1, fillOpacity: 0.12 }).addTo(gerKaart);
+  } else {
+    gerMijnPunt.setLatLng([lat, lon]);
+    gerMijnCirkel.setLatLng([lat, lon]).setRadius(nauw || 30);
+  }
+}
+
+function gerMijnLocatie() {
+  if (!navigator.geolocation) { alert('Locatie wordt door dit toestel niet ondersteund.'); return; }
+  // Al een locatie bekend: gewoon opnieuw naar je toe zoomen
+  if (gerMijnPunt) {
+    const p = gerMijnPunt.getLatLng();
+    gerKaart.setView(p, Math.max(gerKaart.getZoom(), 14), { animate: true });
+    return;
+  }
+  gerEersteFix = true;
+  const opties = { enableHighAccuracy: true, timeout: 20000, maximumAge: 10000 };
+  const ok = pos => {
+    gerToonMijnLocatie(pos.coords.latitude, pos.coords.longitude, pos.coords.accuracy);
+    if (gerEersteFix) {
+      gerEersteFix = false;
+      gerKaart.setView([pos.coords.latitude, pos.coords.longitude], 14, { animate: true });
+    }
+  };
+  const fout = err => {
+    if (err && err.code === 1) alert('Geen toegang tot je locatie. Zet locatie aan voor deze app: Instellingen → Privacy → Locatievoorzieningen → Safari/Rozal.');
+    else alert('Je locatie kon niet worden bepaald. Probeer het buiten of later opnieuw.');
+  };
+  if (gerWatchId !== null) navigator.geolocation.clearWatch(gerWatchId);
+  gerWatchId = navigator.geolocation.watchPosition(ok, fout, opties);   // blijft bijwerken terwijl je rijdt
 }
 
 function gerZetMarkers(items) {
@@ -401,6 +461,8 @@ async function gerVerversKnop(el) {
   .ger-type { font-size:10.5px; font-weight:700; padding:3px 9px; border-radius:20px; flex-shrink:0; }
   .ger-sub { font-size:12px; color:#777; margin-top:4px; line-height:1.4; }
   .ger-opm { font-size:12px; margin-top:6px; background:#f6f8f2; border-radius:8px; padding:6px 9px; }
+  .ger-loc-btn { width:34px; height:34px; border-radius:8px; background:#fff; border:2px solid rgba(0,0,0,.2); display:flex; align-items:center; justify-content:center; font-size:18px; cursor:pointer; box-shadow:none; }
+  .ger-loc-btn:active { background:#EAF0E1; }
   .ger-route { color:#2D5016; font-weight:700; text-decoration:none; margin-left:6px; }
   .tab-label { white-space:nowrap; }
   .tab-bar .tab-label { font-size:10px; }`;
