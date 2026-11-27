@@ -4,7 +4,7 @@
 // zonder internet meteen verschijnen. Data komt ALTIJD live uit
 // SharePoint — die wordt hier nooit gecachet.
 // ══════════════════════════════════════════════════════════════
-const CACHE_NAAM = 'rozal-inzien-v7';
+const CACHE_NAAM = 'rozal-inzien-v8';
 const APP_SHELL = [
   './',
   './index.html',
@@ -19,6 +19,7 @@ const APP_SHELL = [
   './js/inmeten.js',
   './js/fotos.js',
   './js/boekingen.js',
+  './js/gereden.js',
   './js/msal-browser.min.js',
   './icons/icon-192.png',
   './icons/icon-512.png',
@@ -41,6 +42,10 @@ self.addEventListener('fetch', event => {
   // Nooit cachen: Microsoft login/graph verkeer — dat moet altijd live zijn
   if (url.includes('login.microsoftonline.com') || url.includes('graph.microsoft.com') || url.includes('sharepoint.com') || url.includes('azurewebsites.net')) {
     return; // laat gewoon door naar het netwerk
+  }
+  // Kaart (Gereden-tab): kaarttegels, kaartbibliotheek en adres-opzoeken niet in de cache stoppen
+  if (url.includes('cartocdn.com') || url.includes('openstreetmap.org') || url.includes('unpkg.com')) {
+    return;
   }
 
   // Iconen veranderen zelden — die mogen gewoon uit cache (snel)
